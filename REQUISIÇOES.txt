@@ -1,0 +1,52 @@
+Rotas de Produtos
+Adicionar ou Atualizar Produto (POST)
+
+URL: http://127.0.0.1:5000/produto
+Método: POST
+Descrição: Adiciona ou atualiza um produto.
+Listar Todos os Produtos (GET)
+
+URL: http://127.0.0.1:5000/produtos
+Método: GET
+Descrição: Retorna todos os produtos cadastrados.
+Buscar Produto pelo Código de Barras (GET)
+
+URL: http://127.0.0.1:5000/produto/<codigo_barras>
+Método: GET
+Descrição: Retorna um produto específico pelo seu código de barras.
+Exemplo: http://127.0.0.1:5000/produto/1234567890123
+Atualizar Produto (PUT)
+
+URL: http://127.0.0.1:5000/produto/<codigo_barras>
+Método: PUT
+Descrição: Atualiza as informações de um produto específico usando o código de barras.
+Exemplo: http://127.0.0.1:5000/produto/1234567890123
+Deletar Produto (DELETE)
+
+URL: http://127.0.0.1:5000/produto/<codigo_barras>
+Método: DELETE
+Descrição: Deleta um produto específico pelo código de barras.
+Exemplo: http://127.0.0.1:5000/produto/1234567890123
+Rotas de Fornecedores
+Adicionar Fornecedor (POST)
+
+URL: http://127.0.0.1:5000/fornecedor
+Método: POST
+Descrição: Adiciona um fornecedor.
+Listar Todos os Fornecedores (GET)
+
+URL: http://127.0.0.1:5000/fornecedores
+Método: GET
+Descrição: Retorna todos os fornecedores cadastrados.
+Atualizar Fornecedor (PUT)
+
+URL: http://127.0.0.1:5000/fornecedor/<id>
+Método: PUT
+Descrição: Atualiza as informações de um fornecedor específico usando o ID.
+Exemplo: http://127.0.0.1:5000/fornecedor/1
+Deletar Fornecedor (DELETE)
+
+URL: http://127.0.0.1:5000/fornecedor/<id>
+Método: DELETE
+Descrição: Deleta um fornecedor específico pelo ID.
+Exemplo: http://127.0.0.1:5000/fornecedor/1
