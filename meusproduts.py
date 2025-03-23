@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from flask_mysqldb import MySQL
 import os
 from flask_cors import CORS
-from urllib.parse import unquote
 
 app = Flask(__name__)
 CORS(app)
@@ -50,6 +49,7 @@ def add_produto():
         cursor.close()
         return jsonify({"message": "Produtos adicionados ou atualizados com sucesso!"}), 201
     except Exception as e:
+        print(f"Erro ao adicionar ou atualizar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 @app.route('/produtos', methods=['GET'])
@@ -68,6 +68,7 @@ def get_produtos():
             "imagem": p[4] if p[4] and p[4] != p[3] else "placeholder.jpg"
         } for p in produtos]), 200
     except Exception as e:
+        print(f"Erro ao buscar produtos: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 @app.route('/produto/<cod_barras>', methods=['GET'])
@@ -89,6 +90,7 @@ def get_produto(cod_barras):
         else:
             return jsonify({"error": "Produto não encontrado"}), 404
     except Exception as e:
+        print(f"Erro ao buscar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 # ------------------ Novo Endpoint: Atualizar Produto ------------------
@@ -118,6 +120,7 @@ def update_produto(cod_barras):
             cursor.close()
             return jsonify({"error": "Produto não encontrado"}), 404
     except Exception as e:
+        print(f"Erro ao atualizar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 # ------------------ Novo Endpoint: Deletar Produto ------------------
@@ -137,6 +140,7 @@ def delete_produto(cod_barras):
             cursor.close()
             return jsonify({"error": "Produto não encontrado"}), 404
     except Exception as e:
+        print(f"Erro ao deletar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 # ------------------ Endpoints de Fornecedores ------------------
@@ -156,6 +160,7 @@ def get_fornecedores():
             "contato": f[3]
         } for f in fornecedores]), 200
     except Exception as e:
+        print(f"Erro ao buscar fornecedores: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 @app.route('/fornecedor', methods=['POST'])
@@ -189,29 +194,84 @@ def add_fornecedor():
         return jsonify({"message": "Fornecedor(es) adicionados com sucesso!"}), 201
 
     except Exception as e:
+        print(f"Erro ao adicionar fornecedor: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
-@app.route('/verificar_tabela', methods=['GET'])
-def verificar_tabela():
+# ------------------ Novo Endpoint: Buscar Fornecedor por ID ------------------
+@app.route('/fornecedor/<int:id>', methods=['GET'])
+def get_fornecedor(id):
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT id, nome_vendedor, nome_empresa, contato FROM fornecedores WHERE id = %s", (id,))
+        fornecedor = cursor.fetchone()
+        cursor.close()
+
+        if fornecedor:
+            return jsonify({
+                "id": fornecedor[0],
+                "nome_vendedor": fornecedor[1],
+                "nome_empresa": fornecedor[2],
+                "contato": fornecedor[3]
+            }), 200
+        else:
+            return jsonify({"error": "Fornecedor não encontrado"}), 404
+    except Exception as e:
+        print(f"Erro ao buscar fornecedor: {str(e)}")  # Log do erro
+        return jsonify({"error": str(e)}), 500
+
+# ------------------ Novo Endpoint: Atualizar Fornecedor ------------------
+@app.route('/fornecedor/<int:id>', methods=['PUT'])
+def update_fornecedor(id):
+    if not request.is_json:
+        return jsonify({"error": "A requisição precisa ser em formato JSON"}), 400
+    
+    data = request.get_json()
     try:
         cursor = mysql.connection.cursor()
 
-        cursor.execute("SHOW TABLES LIKE 'produtos'")
-        produtos = cursor.fetchone()
+        # Extrai os dados que podem ser atualizados
+        nome_vendedor = data.get('nome_vendedor')
+        nome_empresa = data.get('nome_empresa')
+        contato = data.get('contato')
 
-        cursor.execute("SHOW TABLES LIKE 'fornecedores'")
-        fornecedores = cursor.fetchone()
+        # Verifica se o fornecedor existe no banco de dados
+        cursor.execute("SELECT id FROM fornecedores WHERE id = %s", (id,))
+        fornecedor = cursor.fetchone()
 
-        if produtos and fornecedores:
-            return jsonify({"message": "As tabelas 'produtos' e 'fornecedores' existem!"}), 200
-        elif produtos:
-            return jsonify({"message": "A tabela 'produtos' existe, mas a tabela 'fornecedores' não foi encontrada."}), 200
-        elif fornecedores:
-            return jsonify({"message": "A tabela 'fornecedores' existe, mas a tabela 'produtos' não foi encontrada."}), 200
+        if fornecedor:
+            # Atualiza o fornecedor no banco de dados
+            cursor.execute(
+                "UPDATE fornecedores SET nome_vendedor = %s, nome_empresa = %s, contato = %s WHERE id = %s",
+                (nome_vendedor, nome_empresa, contato, id)
+            )
+            mysql.connection.commit()
+            cursor.close()
+            return jsonify({"message": "Fornecedor atualizado com sucesso!"}), 200
         else:
-            return jsonify({"error": "Nenhuma das tabelas foi encontrada."}), 404
-
+            cursor.close()
+            return jsonify({"error": "Fornecedor não encontrado"}), 404
     except Exception as e:
+        print(f"Erro ao atualizar fornecedor: {str(e)}")  # Log do erro
+        return jsonify({"error": str(e)}), 500
+
+# ------------------ Novo Endpoint: Deletar Fornecedor ------------------
+@app.route('/fornecedor/<int:id>', methods=['DELETE'])
+def delete_fornecedor(id):
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT id FROM fornecedores WHERE id = %s", (id,))
+        fornecedor = cursor.fetchone()
+
+        if fornecedor:
+            cursor.execute("DELETE FROM fornecedores WHERE id = %s", (id,))
+            mysql.connection.commit()
+            cursor.close()
+            return jsonify({"message": "Fornecedor deletado com sucesso!"}), 200
+        else:
+            cursor.close()
+            return jsonify({"error": "Fornecedor não encontrado"}), 404
+    except Exception as e:
+        print(f"Erro ao deletar fornecedor: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
