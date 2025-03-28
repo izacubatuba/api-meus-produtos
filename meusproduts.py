@@ -4,14 +4,13 @@ import os
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Isso permite CORS para todas as rotas.
 
 # Configuração do MySQL
-app.config['MYSQL_HOST'] = os.getenv('mysql://clojfuq754wxkoul:u9jhnosis81qcka8@hcm4e9frmbwfez47.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/duq208de2k20mv5y')
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'hcm4e9frmbwfez47.cbetxkdyhwsb.us-east-1.rds.amazonaws.com')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'clojfuq754wxkoul')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'u9jhnosis81qcka8')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'duq208de2k20mv5y')
-
 mysql = MySQL(app)
 
 # ------------------ Endpoints de Produtos ------------------
@@ -93,7 +92,6 @@ def get_produto(cod_barras):
         print(f"Erro ao buscar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
-# ------------------ Novo Endpoint: Atualizar Produto ------------------
 @app.route('/produto/<cod_barras>', methods=['PUT'])
 def update_produto(cod_barras):
     if not request.is_json:
@@ -123,7 +121,6 @@ def update_produto(cod_barras):
         print(f"Erro ao atualizar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
-# ------------------ Novo Endpoint: Deletar Produto ------------------
 @app.route('/produto/<cod_barras>', methods=['DELETE'])
 def delete_produto(cod_barras):
     try:
@@ -143,139 +140,8 @@ def delete_produto(cod_barras):
         print(f"Erro ao deletar produto: {str(e)}")  # Log do erro
         return jsonify({"error": str(e)}), 500
 
-# ------------------ Endpoints de Fornecedores ------------------
-
-@app.route('/fornecedores', methods=['GET'])
-def get_fornecedores():
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT id, nome_vendedor, nome_empresa, contato FROM fornecedores")
-        fornecedores = cursor.fetchall()
-        cursor.close()
-        
-        return jsonify([{
-            "id": f[0],
-            "nome_vendedor": f[1],
-            "nome_empresa": f[2],
-            "contato": f[3]
-        } for f in fornecedores]), 200
-    except Exception as e:
-        print(f"Erro ao buscar fornecedores: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/fornecedor', methods=['POST'])
-def add_fornecedor():
-    if not request.is_json:
-        return jsonify({"error": "A requisição precisa ser em formato JSON"}), 400
-    
-    data = request.get_json()
-    print("Recebido JSON:", data)
-
-    try:
-        cursor = mysql.connection.cursor()
-        
-        fornecedores = data if isinstance(data, list) else [data]
-
-        for fornecedor in fornecedores:
-            nome_vendedor = fornecedor.get('nome_vendedor')
-            nome_empresa = fornecedor.get('nome_empresa')
-            contato = fornecedor.get('contato')
-
-            if not nome_vendedor or not nome_empresa or not contato:
-                return jsonify({"error": "Todos os campos são obrigatórios"}), 400
-
-            cursor.execute(
-                "INSERT INTO fornecedores (nome_vendedor, nome_empresa, contato) VALUES (%s, %s, %s)",
-                (nome_vendedor, nome_empresa, contato)
-            )
-
-        mysql.connection.commit()
-        cursor.close()
-        return jsonify({"message": "Fornecedor(es) adicionados com sucesso!"}), 201
-
-    except Exception as e:
-        print(f"Erro ao adicionar fornecedor: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-# ------------------ Novo Endpoint: Buscar Fornecedor por ID ------------------
-@app.route('/fornecedor/<int:id>', methods=['GET'])
-def get_fornecedor(id):
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT id, nome_vendedor, nome_empresa, contato FROM fornecedores WHERE id = %s", (id,))
-        fornecedor = cursor.fetchone()
-        cursor.close()
-
-        if fornecedor:
-            return jsonify({
-                "id": fornecedor[0],
-                "nome_vendedor": fornecedor[1],
-                "nome_empresa": fornecedor[2],
-                "contato": fornecedor[3]
-            }), 200
-        else:
-            return jsonify({"error": "Fornecedor não encontrado"}), 404
-    except Exception as e:
-        print(f"Erro ao buscar fornecedor: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-# ------------------ Novo Endpoint: Atualizar Fornecedor ------------------
-@app.route('/fornecedor/<int:id>', methods=['PUT'])
-def update_fornecedor(id):
-    if not request.is_json:
-        return jsonify({"error": "A requisição precisa ser em formato JSON"}), 400
-    
-    data = request.get_json()
-    try:
-        cursor = mysql.connection.cursor()
-
-        # Extrai os dados que podem ser atualizados
-        nome_vendedor = data.get('nome_vendedor')
-        nome_empresa = data.get('nome_empresa')
-        contato = data.get('contato')
-
-        # Verifica se o fornecedor existe no banco de dados
-        cursor.execute("SELECT id FROM fornecedores WHERE id = %s", (id,))
-        fornecedor = cursor.fetchone()
-
-        if fornecedor:
-            # Atualiza o fornecedor no banco de dados
-            cursor.execute(
-                "UPDATE fornecedores SET nome_vendedor = %s, nome_empresa = %s, contato = %s WHERE id = %s",
-                (nome_vendedor, nome_empresa, contato, id)
-            )
-            mysql.connection.commit()
-            cursor.close()
-            return jsonify({"message": "Fornecedor atualizado com sucesso!"}), 200
-        else:
-            cursor.close()
-            return jsonify({"error": "Fornecedor não encontrado"}), 404
-    except Exception as e:
-        print(f"Erro ao atualizar fornecedor: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-# ------------------ Novo Endpoint: Deletar Fornecedor ------------------
-@app.route('/fornecedor/<int:id>', methods=['DELETE'])
-def delete_fornecedor(id):
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT id FROM fornecedores WHERE id = %s", (id,))
-        fornecedor = cursor.fetchone()
-
-        if fornecedor:
-            cursor.execute("DELETE FROM fornecedores WHERE id = %s", (id,))
-            mysql.connection.commit()
-            cursor.close()
-            return jsonify({"message": "Fornecedor deletado com sucesso!"}), 200
-        else:
-            cursor.close()
-            return jsonify({"error": "Fornecedor não encontrado"}), 404
-    except Exception as e:
-        print(f"Erro ao deletar fornecedor: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-
 # ------------------ Rota de Carrinho ------------------
+
 carrinho = []  # Lista para armazenar os itens do carrinho
 
 @app.route('/carrinho', methods=['GET', 'POST'])
@@ -319,78 +185,3 @@ def deletar_produto_do_carrinho(codigo_barras):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-
-from flask import Flask, request, jsonify
-from flask_mysqldb import MySQL
-import os
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)  # Isso permite CORS para todas as rotas.
-
-# Configuração do MySQL
-app.config['MYSQL_HOST'] = os.getenv('mysql://clojfuq754wxkoul:u9jhnosis81qcka8@hcm4e9frmbwfez47.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/duq208de2k20mv5y')
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'clojfuq754wxkoul')
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'u9jhnosis81qcka8')
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'duq208de2k20mv5y')
-mysql = MySQL(app)
-
-# ------------------ Endpoints de Produtos ------------------
-
-@app.route('/produto', methods=['POST'])
-def add_produto():
-    if not request.is_json:
-        return jsonify({"error": "A requisição precisa ser em formato JSON"}), 400
-    
-    data = request.get_json()
-    print("Recebido JSON:", data)
-
-    try:
-        cursor = mysql.connection.cursor()
-        for produto in data if isinstance(data, list) else [data]:
-            categoria = produto.get('categoria', 'Desconhecida')
-            cod_barras = produto.get('cod_barras')
-            descricao_produto = produto.get('descricao_produto', cod_barras)
-            imagem = produto.get('imagem', 'placeholder.jpg')
-
-            print(f"Salvando no BD - Categoria: {categoria}, Código: {cod_barras}, Descrição: {descricao_produto}, Imagem: {imagem}")
-
-            cursor.execute("SELECT id FROM produtos WHERE cod_barras = %s", (cod_barras,))
-            if cursor.fetchone():
-                cursor.execute(
-                    "UPDATE produtos SET categoria = %s, descricao_produto = %s, imagem = %s WHERE cod_barras = %s",
-                    (categoria, descricao_produto, imagem, cod_barras)
-                )
-            else:
-                cursor.execute(
-                    "INSERT INTO produtos (categoria, cod_barras, descricao_produto, imagem) VALUES (%s, %s, %s, %s)",
-                    (categoria, cod_barras, descricao_produto, imagem)
-                )
-        mysql.connection.commit()
-        cursor.close()
-        return jsonify({"message": "Produtos adicionados ou atualizados com sucesso!"}), 201
-    except Exception as e:
-        print(f"Erro ao adicionar ou atualizar produto: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/produtos', methods=['GET'])
-def get_produtos():
-    try:
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT id, categoria, cod_barras, descricao_produto, imagem FROM produtos")
-        produtos = cursor.fetchall()
-        cursor.close()
-        
-        return jsonify([{
-            "id": p[0], 
-            "categoria": p[1] or "Desconhecida", 
-            "cod_barras": p[2], 
-            "descricao_produto": p[3] or p[2],
-            "imagem": p[4] if p[4] and p[4] != p[3] else "placeholder.jpg"
-        } for p in produtos]), 200
-    except Exception as e:
-        print(f"Erro ao buscar produtos: {str(e)}")  # Log do erro
-        return jsonify({"error": str(e)}), 500
