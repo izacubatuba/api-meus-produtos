@@ -7,10 +7,10 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuração do MySQL
-app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', '127.0.0.1')
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', '81100404')
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'produtos_db')
+app.config['MYSQL_HOST'] = os.getenv('mysql://clojfuq754wxkoul:u9jhnosis81qcka8@hcm4e9frmbwfez47.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/duq208de2k20mv5y')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'clojfuq754wxkoul')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'u9jhnosis81qcka8')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'duq208de2k20mv5y')
 
 mysql = MySQL(app)
 
@@ -318,7 +318,8 @@ def deletar_produto_do_carrinho(codigo_barras):
     return jsonify({'message': 'Produto removido do carrinho'}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
 
 
 
@@ -331,11 +332,10 @@ app = Flask(__name__)
 CORS(app)  # Isso permite CORS para todas as rotas.
 
 # Configuração do MySQL
-app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', '127.0.0.1')
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', '81100404')
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'produtos_db')
-
+app.config['MYSQL_HOST'] = os.getenv('mysql://clojfuq754wxkoul:u9jhnosis81qcka8@hcm4e9frmbwfez47.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/duq208de2k20mv5y')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'clojfuq754wxkoul')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'u9jhnosis81qcka8')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'duq208de2k20mv5y')
 mysql = MySQL(app)
 
 # ------------------ Endpoints de Produtos ------------------
